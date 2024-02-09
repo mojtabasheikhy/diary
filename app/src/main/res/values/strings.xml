@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Diary</string>
+    <string name="pleaseSignInToContinue">please Sign In ToContinue</string>
+    <string name="WelcomeBack">Welcome back</string>
+
+</resources>
