@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -20,6 +23,7 @@ import androidx.navigation.navArgument
 import com.example.diary.Constants
 import com.example.diary.Constants.WriteScreenArgumentKey
 import com.example.diary.presentation.screens.auth.AuthenticationScreen
+import com.example.diary.presentation.screens.home.HomeScreen
 import com.example.diary.presentation.viewModel.AuthViewModel
 import com.stevdzasan.messagebar.rememberMessageBarState
 import com.stevdzasan.onetap.rememberOneTapSignInState
@@ -37,13 +41,15 @@ fun NavGraph(startDestination: String, navController: NavHostController) {
             navController.popBackStack()
             navController.navigate(Screen.Home.route)
         })
-        homeRoute()
+        homeRoute(navigateToWrite = {
+            navController.navigate(Screen.Write.route)
+        })
         writeRoute()
     }
 
 }
 
-fun NavGraphBuilder.authenticationRoute(navigateToHome : ()-> Unit) {
+fun NavGraphBuilder.authenticationRoute(navigateToHome: () -> Unit) {
     composable(route = Screen.Authentication.route) {
         val oneTapState = rememberOneTapSignInState()
         val messageBarState = rememberMessageBarState()
@@ -84,20 +90,15 @@ fun NavGraphBuilder.authenticationRoute(navigateToHome : ()-> Unit) {
     }
 }
 
-fun NavGraphBuilder.homeRoute() {
+fun NavGraphBuilder.homeRoute(navigateToWrite: () -> Unit) {
     composable(route = Screen.Home.route) {
+        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
-        Column(Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
-               Button(onClick = {
-                   scope.launch (Dispatchers.IO){
-                       App.create(appId = Constants.AppIdMongoDbServices).currentUser?.logOut()
-                   }
-               }) {
-                   Text(text = "Logout")
-               }
-        }
+        HomeScreen(onMenuClicked = {
+            scope.launch {
+                drawerState.open()
+            }
+        }, navigateToWrite = navigateToWrite, onSignOutClicked = {}, drawerState = drawerState)
     }
 }
 
