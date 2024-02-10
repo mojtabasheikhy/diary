@@ -1,6 +1,5 @@
-package com.example.diary.presentation
+package com.example.diary.presentation.components
 
-import android.text.Layout.Alignment
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -34,7 +33,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.content.pm.ShortcutInfoCompat.Surface
 import com.example.diary.R
 
 @Composable

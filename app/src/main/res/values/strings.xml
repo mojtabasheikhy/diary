@@ -3,5 +3,9 @@
     <string name="pleaseSignInToContinue">please Sign In ToContinue</string>
     <string name="WelcomeBack">Welcome back</string>
     <string name="logout">Logout</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="SignOut">Sign out</string>
+    <string name="SignOutMessage">Are you sure you want to sign out from your google account</string>
 
 </resources>

@@ -1,6 +1,5 @@
 package com.example.diary.presentation.screens
 
-import android.widget.Space
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,7 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.diary.R
-import com.example.diary.presentation.GoogleButton
+import com.example.diary.presentation.components.GoogleButton
 
 @Composable
 fun AuthenticationContent(loadingState : Boolean , onClick:()->Unit) {
