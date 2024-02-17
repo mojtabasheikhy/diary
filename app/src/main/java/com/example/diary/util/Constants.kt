@@ -1,4 +1,4 @@
-package com.example.diary
+package com.example.diary.util
 
 object Constants {
     const val AppIdMongoDbServices = "application-0-oddls"
