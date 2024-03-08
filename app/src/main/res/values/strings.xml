@@ -9,6 +9,8 @@
     <string name="HideGallery">Hide Gallery</string>
     <string name="ShowGallery">Show Gallery</string>
     <string name="EmptyDiary">Empty Diary</string>
+    <string name="Delete">Delete</string>
+    <string name="save">Save</string>
     <string name="WriteSomething">Write Somethings</string>
     <string name="SignOutMessage">Are you sure you want to sign out from your google account</string>
 

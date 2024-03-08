@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +28,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,20 +47,26 @@ import com.example.diary.data.repository.diaries
 import com.example.diary.util.RequestState
 import io.realm.kotlin.internal.platform.createDefaultSystemLogger
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun HomeScreen(
     diaries: diaries,
     drawerState: DrawerState,
     onSignOutClicked: () -> Unit,
-    onMenuClicked: () -> Unit, navigateToWrite: () -> Unit
+    onMenuClicked: () -> Unit,
+    navigateToWrite: () -> Unit,
+    navigateToWriteWithArgs: (String) -> Unit
 ) {
     var padding by remember {
         mutableStateOf(PaddingValues())
     }
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     NavigationDrawer(drawerState = drawerState, onSignOutClicked = onSignOutClicked) {
-        Scaffold(topBar = {
-            HomeTopBar(onMenuClicked)
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+            HomeTopBar(scrollBehavior,onMenuClicked)
         }, floatingActionButton = {
             FloatingActionButton(
                 modifier =  Modifier
@@ -70,22 +79,22 @@ fun HomeScreen(
             when(diaries){
                 is RequestState.Success->{
 
-                    HomeContent(paddingValues = it,diaryNotes = diaries.data, onClick = {})
+                    HomeContent(paddingValues = it,diaryNotes = diaries.data, onClick = navigateToWriteWithArgs )
                 }
                 is RequestState.Loading->{
-                    Log.e("sd","loading")
+
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
                         CircularProgressIndicator()
                     }
                 }
                 is RequestState.Error->{
-                    Log.e("sd","e")
+
                     EmptyPage(
                         title = "error" ,
                         subtitle = diaries.error.message.toString())
                 }
                 else->{
-                    Log.e("sd","else")
+
                 }
             }
         })
