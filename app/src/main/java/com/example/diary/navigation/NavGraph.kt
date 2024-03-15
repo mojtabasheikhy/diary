@@ -1,11 +1,13 @@
 package com.example.diary.navigation
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +32,7 @@ import com.example.diary.presentation.components.DisplayAlertDialog
 import com.example.diary.presentation.screens.auth.AuthenticationScreen
 import com.example.diary.presentation.screens.home.HomeScreen
 import com.example.diary.presentation.screens.write.WriteScreen
+import com.example.diary.presentation.screens.write.WriteViewModel
 import com.example.diary.presentation.viewModel.AuthViewModel
 import com.example.diary.presentation.viewModel.HomeViewModel
 import com.example.diary.util.RequestState
@@ -180,6 +183,25 @@ fun NavGraphBuilder.writeRoute(
         })
     ) {
         val pagerState = rememberPagerState(pageCount = { Mood.entries.size })
-       WriteScreen(onBackPress = onBackPressed ,selectedDiary = null , onDeleteConfirmed = {}  ,pageState = pagerState)
+        val viewModel :WriteViewModel = viewModel()
+        val uiState = viewModel.uiState
+        val pageNumber by remember {
+            derivedStateOf {
+                pagerState.currentPage
+            }
+        }
+        WriteScreen(
+            onBackPress = onBackPressed ,
+            onDeleteConfirmed = {}  ,
+            pageState = pagerState ,
+            uiState = uiState,
+            onTitleChange = { viewModel.setTitle(title = it )} ,
+            onDescription = { viewModel.setDescription(des = it )} ,
+            moodName =  { Mood.entries[pageNumber].name } , onSavedClicked = {
+                viewModel.insertDiary(
+                    diary = it.apply { mood = Mood.entries[pageNumber].name } ,
+                    onSuccess = {onBackPressed()}  ,
+                    onError = {})
+            })
     }
 }

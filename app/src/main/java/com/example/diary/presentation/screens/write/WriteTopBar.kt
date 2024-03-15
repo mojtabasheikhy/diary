@@ -27,14 +27,49 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.toUpperCase
 import com.example.diary.R
 import com.example.diary.presentation.components.DisplayAlertDialog
+import com.example.diary.util.toInstant
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WriteTopBar(
     selectedDiary: Diary?,
-    onBackPress :()-> Unit,onDeleteConfirmed : ()->Unit) {
+    onBackPress :()-> Unit,
+    onDeleteConfirmed : ()->Unit,
+    moodName :()-> String
+    ) {
+    val currentDate by remember { mutableStateOf(LocalDate.now()) }
+    val currentTime by remember { mutableStateOf(LocalTime.now())}
+    val formattedDate = remember (key1 = currentDate){
+        DateTimeFormatter
+            .ofPattern("dd MMM yyyy")
+            .format(currentDate)
+            .uppercase()
+    }
+    val formattedTime = remember (key1 = currentDate){
+        DateTimeFormatter
+            .ofPattern("hh:mm a")
+            .format(currentTime)
+            .uppercase()
+    }
+    val selectedDiaryDateTime = remember(selectedDiary) {
+           if(selectedDiary!=null){
+               SimpleDateFormat("dd MMM yyyy , hh:mm a", Locale.getDefault())
+                   .format(Date.from(selectedDiary.date.toInstant())).uppercase()
+           }else {
+
+               "$formattedDate ,$formattedTime"
+           }
+
+    }
     CenterAlignedTopAppBar( navigationIcon = {
         IconButton(onClick = {
             onBackPress()
@@ -45,13 +80,13 @@ fun WriteTopBar(
     },title = {
         Column {
             Text(
-                modifier = Modifier.fillMaxWidth(), text = "Happy" ,
+                modifier = Modifier.fillMaxWidth(), text = moodName() ,
                 style = TextStyle(fontSize = MaterialTheme.typography.titleLarge.fontSize,   fontWeight = FontWeight.Bold),
                 textAlign =  TextAlign.Center
 
             )
             Text(
-                modifier = Modifier.fillMaxWidth(), text = "10 JAN 2023 , 10:00 AM" ,
+                modifier = Modifier.fillMaxWidth(), text =selectedDiaryDateTime ,
                 style = TextStyle(fontSize = MaterialTheme.typography.bodySmall.fontSize),
                 textAlign =  TextAlign.Center
             )

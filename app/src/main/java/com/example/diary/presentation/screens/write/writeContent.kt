@@ -1,5 +1,6 @@
 package com.example.diary.presentation.screens.write
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,19 +39,23 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.diary.R
+import com.example.diary.model.Diary
 import com.example.diary.model.Mood
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun WriteContent(
+    uiState: UiState,
     title:String,
     onTitleChange :(String)->Unit,
     description:String,
     onDescriptionChange :(String)->Unit,
     paddingValues: PaddingValues ,
-    pagerState: PagerState){
-    var scrollState = rememberScrollState()
+    pagerState: PagerState,
+    onSaveClicked:(Diary)->Unit){
+    val scrollState = rememberScrollState()
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -137,7 +142,17 @@ fun WriteContent(
             Button(modifier = Modifier
                 .fillMaxWidth()
                 .height(54.dp),
-                onClick = {},
+                onClick = {
+                     if (uiState.title.isNotEmpty() && uiState.description.isNotEmpty()){
+                         onSaveClicked(Diary().apply {
+                             this.title = uiState.title
+                             this.description = uiState.description
+
+                         })
+                   }else {
+                       Toast.makeText(context , "the title or description is empty" , Toast.LENGTH_LONG).show()
+                   }
+                },
                 shape = Shapes().small
             ){
                 Text(text = stringResource(id = R.string.save))

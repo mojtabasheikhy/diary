@@ -6,17 +6,40 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import com.example.diary.model.Diary
+import com.example.diary.model.Mood
 
 @OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun WriteScreen(onBackPress :()-> Unit ,selectedDiary :Diary ? , onDeleteConfirmed : ()->Unit ,pageState : PagerState) {
+fun WriteScreen(
+    onBackPress :()-> Unit ,
+
+    onDeleteConfirmed : ()->Unit ,
+    moodName : ()->String,
+    pageState : PagerState,
+    uiState: UiState,
+    onTitleChange :(String)->Unit,
+    onDescription :(String)->Unit ,
+    onSavedClicked : (Diary)->Unit) {
+    LaunchedEffect(key1 = uiState.mood ){
+        pageState.scrollToPage(Mood.valueOf(uiState.mood.name).ordinal)
+    }
     Scaffold (
         topBar = {
-           WriteTopBar(onBackPress = onBackPress , onDeleteConfirmed = onDeleteConfirmed , selectedDiary = selectedDiary)
+           WriteTopBar(onBackPress = onBackPress , onDeleteConfirmed = onDeleteConfirmed , selectedDiary = uiState.selectedDiary , moodName =moodName )
         }, content = {
-            WriteContent(paddingValues = it , pagerState = pageState , title = "", description ="" , onDescriptionChange ={} , onTitleChange ={} )
+            WriteContent(
+                uiState = uiState,
+                paddingValues = it ,
+                pagerState = pageState ,
+                title = uiState.title,
+                description = uiState.description ,
+                onDescriptionChange = onDescription ,
+                onTitleChange =onTitleChange ,
+                onSaveClicked = onSavedClicked
+                )
         }
     )
 }
