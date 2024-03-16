@@ -11,12 +11,15 @@ import com.example.diary.model.Diary
 import com.example.diary.model.Mood
 import com.example.diary.util.Constants
 import com.example.diary.util.RequestState
+import com.example.diary.util.toRealmInstant
+import io.realm.kotlin.types.RealmInstant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.mongodb.kbson.BsonObjectId
 import org.mongodb.kbson.ObjectId
+import java.time.ZonedDateTime
 
 class WriteViewModel(private  val savedStateHandle : SavedStateHandle) : ViewModel() {
     var uiState by mutableStateOf(UiState())
@@ -52,19 +55,21 @@ class WriteViewModel(private  val savedStateHandle : SavedStateHandle) : ViewMod
     fun setDescription(des: String){
         uiState = uiState.copy(description = des)
     }
-
     private fun setMode(mood: Mood){
         uiState = uiState.copy(mood = mood)
+    }
+    private fun updatedDateTime(zoneDateTime : ZonedDateTime){
+        uiState = uiState.copy(updatedDateTime = zoneDateTime.toInstant().toRealmInstant())
     }
     private fun setSelectedDiary(diary: Diary){
         uiState  =uiState.copy(selectedDiary = diary)
     }
-    fun insertDiary(
+    private suspend  fun insertDiary(
         diary: Diary ,
         onSuccess :()->Unit ,
         onError: (String)->Unit ){
 
-        viewModelScope.launch(Dispatchers.IO) {
+
             val result = MongoDB.addNewDiary(diary)
             if (result is RequestState.Success){
                 withContext(Dispatchers.Main) {
@@ -75,8 +80,40 @@ class WriteViewModel(private  val savedStateHandle : SavedStateHandle) : ViewMod
                     onError(result.error.message.toString())
                 }
             }
-        }
 
+
+    }
+
+    fun upsertDiary(
+        diary: Diary,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ){
+        viewModelScope.launch (Dispatchers.IO){
+              if (uiState.selectedDiaryId != null){
+                  updateDiary(diary = diary,onSuccess = onSuccess , onError = onError)
+              }else {
+                   insertDiary(diary = diary,onSuccess = onSuccess , onError = onError)
+              }
+
+        }
+    }
+
+   private suspend fun updateDiary(diary: Diary, onSuccess: () -> Unit, onError: (String) -> Unit){
+        val result = MongoDB.updateDiary(diary = diary.apply {
+            _id = io.realm.kotlin.types.ObjectId.Companion.from(uiState.selectedDiaryId!!)
+           date = uiState.selectedDiary!!.date
+        })
+        if (result is RequestState.Success){
+            withContext(Dispatchers.Main){
+                onSuccess()
+            }
+
+        } else if (result is RequestState.Error){
+            withContext(Dispatchers.Main){
+                onError(result.error.message.toString())
+            }
+        }
     }
 
 }
@@ -85,5 +122,6 @@ data class UiState(
     val selectedDiary :Diary?  = null,
     val title : String = "" ,
     val description : String = "",
-    val mood : Mood = Mood.Neutral
+    val mood : Mood = Mood.Neutral ,
+    val updatedDateTime :RealmInstant ? = null
 )

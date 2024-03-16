@@ -86,10 +86,10 @@ dependencies {
     implementation("io.realm.kotlin:library-base:1.13.0")
 
     implementation("com.google.dagger:hilt-android:2.50")
-    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     ksp("com.google.dagger:hilt-android-compiler:2.50")
 
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
 
     implementation( "androidx.room:room-runtime:2.6.1")
 
@@ -111,4 +111,7 @@ dependencies {
 
     implementation("io.realm.kotlin:library-base:1.13.0")
     implementation ("io.realm.kotlin:library-sync:1.13.0")
+    implementation ("com.maxkeppeler.sheets-compose-dialogs:core:1.3.0")
+    implementation ("com.maxkeppeler.sheets-compose-dialogs:calendar:1.3.0")
+    implementation ("com.maxkeppeler.sheets-compose-dialogs:clock:1.3.0")
 }
