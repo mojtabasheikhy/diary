@@ -1,4 +1,4 @@
-package com.example.diary.presentation.viewModel
+package com.example.diary.presentation.screens.home
 
 import android.util.Log
 import androidx.compose.runtime.MutableState

@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
@@ -27,12 +29,16 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -41,6 +47,7 @@ import coil.request.ImageRequest
 import com.example.diary.R
 import com.example.diary.model.Diary
 import com.example.diary.model.Mood
+import kotlinx.coroutines.launch
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -56,11 +63,17 @@ fun WriteContent(
     onSaveClicked:(Diary)->Unit){
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    var coroutineScope = rememberCoroutineScope()
+    LaunchedEffect(key1 = scrollState.maxValue ){
+        scrollState.scrollTo(scrollState.maxValue)
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
+            .navigationBarsPadding()
             .padding(top = paddingValues.calculateTopPadding())
-            .padding(bottom = paddingValues.calculateBottomPadding())
             .padding(bottom = 24.dp)
             .padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.SpaceBetween
@@ -103,7 +116,13 @@ fun WriteContent(
                        imeAction = ImeAction.Next
                    ),
                    keyboardActions = KeyboardActions(
-                       onNext = {}
+                       onNext = {
+                           focusManager.moveFocus(FocusDirection.Down)
+                           coroutineScope.launch {
+                               scrollState.scrollTo(Int.MAX_VALUE )
+
+                           }
+                       }
                    ),
                    maxLines = 1,
                    singleLine = true
@@ -129,7 +148,9 @@ fun WriteContent(
                        imeAction = ImeAction.Next
                    ),
                    keyboardActions = KeyboardActions(
-                       onNext = {}
+                       onNext = {
+                           focusManager.clearFocus()
+                       }
                    )
                )
 

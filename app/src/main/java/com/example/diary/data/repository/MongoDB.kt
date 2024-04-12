@@ -112,7 +112,7 @@ object MongoDB : MongoRepository {
                     queryDiary.images = diary.images
                     queryDiary.date = diary.date
                     RequestState.Success(data = queryDiary)
-                }else {
+                } else {
                     RequestState.Error(error = Exception("diary not found "))
                 }
             }
@@ -122,6 +122,30 @@ object MongoDB : MongoRepository {
             RequestState.Error(UserNotAuthenticatedException())
         }
     }
+
+    override suspend fun deleteDiary(id: ObjectId): RequestState<Diary> {
+        return if (user != null) {
+
+            realm.write {
+
+                    var diary = query<Diary>(query = "_id  == $0 AND ownerId == $1", id, user.id).first().find()
+                    if (diary!= null){
+                        try {
+                        delete(diary)
+                        RequestState.Success(data = diary)
+                       } catch (e: Exception) {
+                        RequestState.Error(e)
+                        }
+                    }else {
+                        RequestState.Error(Exception("Diary not Found"))
+                    }
+
+            }
+        } else {
+            RequestState.Error(UserNotAuthenticatedException())
+        }
+    }
+
 
 }
 

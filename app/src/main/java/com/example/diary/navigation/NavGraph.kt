@@ -1,6 +1,6 @@
 package com.example.diary.navigation
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DrawerValue
@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,15 +27,14 @@ import com.example.diary.util.Constants
 import com.example.diary.util.Constants.WriteScreenArgumentKey
 import com.example.diary.R
 import com.example.diary.data.repository.MongoDB
-import com.example.diary.model.Diary
 import com.example.diary.model.Mood
 import com.example.diary.presentation.components.DisplayAlertDialog
 import com.example.diary.presentation.screens.auth.AuthenticationScreen
 import com.example.diary.presentation.screens.home.HomeScreen
 import com.example.diary.presentation.screens.write.WriteScreen
 import com.example.diary.presentation.screens.write.WriteViewModel
-import com.example.diary.presentation.viewModel.AuthViewModel
-import com.example.diary.presentation.viewModel.HomeViewModel
+import com.example.diary.presentation.screens.auth.AuthViewModel
+import com.example.diary.presentation.screens.home.HomeViewModel
 import com.example.diary.util.RequestState
 
 import com.stevdzasan.messagebar.rememberMessageBarState
@@ -122,7 +122,7 @@ fun NavGraphBuilder.homeRoute(
     onDataLoaded : ()->Unit) {
     composable(route = Screen.Home.route) {
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-        val viewModel :HomeViewModel = viewModel()
+        val viewModel : HomeViewModel = viewModel()
         val diaries by viewModel.diaries
         var signOutDialogState by remember {
             mutableStateOf(false)
@@ -184,6 +184,7 @@ fun NavGraphBuilder.writeRoute(
     ) {
         val pagerState = rememberPagerState(pageCount = { Mood.entries.size })
         val viewModel :WriteViewModel = viewModel()
+        val context = LocalContext.current
         val uiState = viewModel.uiState
         val pageNumber by remember {
             derivedStateOf {
@@ -192,16 +193,41 @@ fun NavGraphBuilder.writeRoute(
         }
         WriteScreen(
             onBackPress = onBackPressed ,
-            onDeleteConfirmed = {}  ,
+            onDeleteConfirmed = {
+                viewModel.deleteDiary(
+                    onSuccess =  {
+                       Toast.makeText(context , "Diary delete success full", Toast.LENGTH_LONG).show()
+                        onBackPressed()
+                    } ,
+                    onError = {
+                        Toast.makeText(context , it, Toast.LENGTH_LONG).show()
+
+                    }
+                )
+            }  ,
             pageState = pagerState ,
             uiState = uiState,
-            onTitleChange = { viewModel.setTitle(title = it )} ,
-            onDescription = { viewModel.setDescription(des = it )} ,
-            moodName =  { Mood.entries[pageNumber].name } , onSavedClicked = {
+            onTitleChange = {
+                viewModel.setTitle(title = it )
+            },
+            onDescription = {
+                viewModel.setDescription(des = it )
+            },
+            moodName =  {
+                Mood.entries[pageNumber].name
+            },
+            onSavedClicked = {
                 viewModel.upsertDiary(
                     diary = it.apply { mood = Mood.entries[pageNumber].name } ,
                     onSuccess = {onBackPressed()}  ,
-                    onError = {})
-            })
+                    onError = {
+                        Toast.makeText(context , it, Toast.LENGTH_LONG).show()
+
+                    })
+            },
+            onDateTimeUpdated = {
+                viewModel.updatedDateTime(it)
+            }
+        )
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -15,7 +16,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -30,10 +33,27 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.toUpperCase
 import com.example.diary.R
 import com.example.diary.presentation.components.DisplayAlertDialog
+import com.example.diary.util.Constants
+import com.example.diary.util.Constants.DatePattern
+import com.example.diary.util.Constants.DateTimePattern
+import com.example.diary.util.Constants.TimePattern
 import com.example.diary.util.toInstant
+import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
+import com.maxkeppeler.sheets.calendar.CalendarDialog
+import com.maxkeppeler.sheets.calendar.models.CalendarConfig
+import com.maxkeppeler.sheets.calendar.models.CalendarSelection
+import com.maxkeppeler.sheets.clock.ClockDialog
+import com.maxkeppeler.sheets.clock.models.ClockSelection
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
@@ -44,28 +64,36 @@ fun WriteTopBar(
     selectedDiary: Diary?,
     onBackPress :()-> Unit,
     onDeleteConfirmed : ()->Unit,
-    moodName :()-> String
+    moodName :()-> String,
+    onDateTimeUpdated : (ZonedDateTime)->Unit
     ) {
-    val currentDate by remember { mutableStateOf(LocalDate.now()) }
-    val currentTime by remember { mutableStateOf(LocalTime.now())}
+    var dateDialog = rememberUseCaseState()
+    var timeDialog = rememberUseCaseState()
+    var currentDate by remember { mutableStateOf(LocalDate.now()) }
+    var currentTime by remember { mutableStateOf(LocalTime.now())}
     val formattedDate = remember (key1 = currentDate){
         DateTimeFormatter
-            .ofPattern("dd MMM yyyy")
+            .ofPattern(DatePattern)
             .format(currentDate)
             .uppercase()
     }
     val formattedTime = remember (key1 = currentDate){
         DateTimeFormatter
-            .ofPattern("hh:mm a")
+            .ofPattern(TimePattern)
             .format(currentTime)
             .uppercase()
     }
+    var dateTimeUpdated by remember {
+        mutableStateOf(false)
+    }
     val selectedDiaryDateTime = remember(selectedDiary) {
-           if(selectedDiary!=null){
-               SimpleDateFormat("dd MMM yyyy , hh:mm a", Locale.getDefault())
+           if(selectedDiary != null && dateTimeUpdated){
+               "$formattedDate ,$formattedTime"
+           }else if (selectedDiary != null) {
+               SimpleDateFormat(DateTimePattern, Locale.getDefault())
                    .format(Date.from(selectedDiary.date.toInstant())).uppercase()
-           }else {
-
+           }
+           else {
                "$formattedDate ,$formattedTime"
            }
 
@@ -77,33 +105,70 @@ fun WriteTopBar(
             Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back Arrow Icon")
             
         }
-    },title = {
+    },
+        title = {
         Column {
             Text(
-                modifier = Modifier.fillMaxWidth(), text = moodName() ,
+                modifier = Modifier.fillMaxWidth(),
+                text = moodName() ,
                 style = TextStyle(fontSize = MaterialTheme.typography.titleLarge.fontSize,   fontWeight = FontWeight.Bold),
                 textAlign =  TextAlign.Center
 
             )
             Text(
-                modifier = Modifier.fillMaxWidth(), text =selectedDiaryDateTime ,
+                modifier = Modifier.fillMaxWidth(),
+                text = selectedDiaryDateTime ,
                 style = TextStyle(fontSize = MaterialTheme.typography.bodySmall.fontSize),
                 textAlign =  TextAlign.Center
             )
         }
-    } , actions = {
-        IconButton(onClick = {}) {
-            Icon(
-                imageVector = Icons.Default.DateRange, 
-                contentDescription = "Date Icon",
-                tint = MaterialTheme.colorScheme.onSurface)
-        }
+    },
+        actions = {
+            if(dateTimeUpdated){
+                IconButton(onClick = {
+                    currentDate = LocalDate.now()
+                    currentTime = LocalTime.now()
+                    dateTimeUpdated = false
+                    onDateTimeUpdated(ZonedDateTime.of(currentDate , currentTime , ZoneId.systemDefault()))
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close Icon",
+                        tint = MaterialTheme.colorScheme.onSurface)
+                }
+            }else{
+                IconButton(onClick = {
+                    dateDialog.show()
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = "Date Icon",
+                        tint = MaterialTheme.colorScheme.onSurface)
+                }
+            }
+
         if (selectedDiary != null){
            DeleteDiaryAction(selectedDiary = selectedDiary , onDeleteConfirmed = onDeleteConfirmed )
         }
 
     } )
+    CalendarDialog(
+        state = dateDialog,
+        selection = CalendarSelection.Date {localDate ->
+        currentDate = localDate
+        timeDialog.show()
+        },
+        config = CalendarConfig(monthSelection =  true , yearSelection =  true)
+    )
+    ClockDialog(state = timeDialog, selection = ClockSelection.HoursMinutesSeconds { h , m ,s ->
+        currentTime = LocalTime.of(h ,m,s)
+        dateTimeUpdated = true
+        onDateTimeUpdated(ZonedDateTime.of(currentDate, currentTime, ZoneId.systemDefault()))
+    })
+
+
 }
+
 @Composable
 fun DeleteDiaryAction(selectedDiary: Diary? , onDeleteConfirmed : ()->Unit){
     var expanded by remember {
